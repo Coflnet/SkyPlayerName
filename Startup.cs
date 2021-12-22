@@ -75,8 +75,6 @@ namespace Coflnet.Sky.PlayerName
                 c.RoutePrefix = "api";
             });
 
-            app.UseHttpsRedirection();
-
             app.UseRouting();
 
             app.UseResponseCaching();
