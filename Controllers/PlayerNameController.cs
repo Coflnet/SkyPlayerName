@@ -39,6 +39,7 @@ namespace Coflnet.Sky.PlayerName.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("name/{uuid}")]
+        [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any, NoStore = false)]
         public async Task<string> GetName(string uuid)
         {
             logger.LogInformation($"Getting {uuid}");
@@ -64,6 +65,7 @@ namespace Coflnet.Sky.PlayerName.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("uuid/{name}")]
+        [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any, NoStore = false)]
         public async Task<string> GetUuId(string name)
         {
             return await service.GetUuid(name);

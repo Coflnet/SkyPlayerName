@@ -57,6 +57,7 @@ namespace Coflnet.Sky.PlayerName
                     .EnableDetailedErrors()       // <-- with debugging (remove for production).
             );
             services.AddResponseCaching();
+            services.AddMemoryCache();
             services.AddJaeger();
             services.AddTransient<PlayerNameService>();
         }
