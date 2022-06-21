@@ -3,7 +3,8 @@ using Coflnet.Sky.PlayerName.Models;
 using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using hypixel;
+using Coflnet.Sky.Core;
+using System.Collections.Generic;
 
 namespace Coflnet.Sky.PlayerName.Services
 {
@@ -28,6 +29,11 @@ namespace Coflnet.Sky.PlayerName.Services
         public async Task<int> GetId(string uuid)
         {
             return await db.Players.Where(p=>p.UuId == uuid || p.Name == uuid).Select(p=>p.Id).FirstOrDefaultAsync();
+        }
+
+        internal async Task<Dictionary<string, string>> GetNames(IEnumerable<string> uuids)
+        {
+            return await db.Players.Where(p=>uuids.Contains(p.UuId)).ToDictionaryAsync(p=>p.UuId, p=>p.Name);
         }
     }
 }

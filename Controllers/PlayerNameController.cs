@@ -44,6 +44,18 @@ namespace Coflnet.Sky.PlayerName.Controllers
             logger.LogInformation($"Getting {uuid}");
             return await service.GetName(uuid);
         }
+
+        /// <summary>
+        /// Gets the name for a uuid
+        /// </summary>
+        /// <param name="uuids">The uuid to get the name for</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("names/batch")]
+        public async Task<Dictionary<string,string>> GetNameBatch(IEnumerable<string> uuids)
+        {
+            return await service.GetNames(uuids);
+        }
         
         /// <summary>
         /// Gets the uuid for some name
