@@ -1,22 +1,15 @@
 using System;
 using System.IO;
 using System.Reflection;
-using Coflnet.Sky.PlayerName.Models;
 using Coflnet.Sky.PlayerName.Services;
 using Coflnet.Sky.Core;
-using Jaeger.Samplers;
-using Jaeger.Senders;
-using Jaeger.Senders.Thrift;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using OpenTracing;
-using OpenTracing.Util;
 using Prometheus;
 
 namespace Coflnet.Sky.PlayerName
@@ -58,7 +51,7 @@ namespace Coflnet.Sky.PlayerName
             );
             services.AddResponseCaching();
             services.AddMemoryCache();
-            services.AddJaeger();
+            services.AddJaeger(Configuration);
             services.AddTransient<PlayerNameService>();
         }
 
