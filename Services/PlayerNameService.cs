@@ -19,21 +19,22 @@ namespace Coflnet.Sky.PlayerName.Services
 
         public async Task<string> GetName(string uuid)
         {
-            return await db.Players.Where(p=>p.UuId == uuid).Select(p=>p.Name).FirstOrDefaultAsync();
+            return await db.Players.Where(p => p.UuId == uuid).Select(p => p.Name).FirstOrDefaultAsync()
+                ?? (uuid.StartsWith("00000000000000000000") ? "-" : null); // 0 prefixed uuids are anonymous users who wanted to leave the dataset, their name is set to - like on namemc
         }
 
         public async Task<string> GetUuid(string name)
         {
-            return await db.Players.Where(p=>p.Name == name).Select(p=>p.UuId).FirstOrDefaultAsync();
+            return await db.Players.Where(p => p.Name == name).Select(p => p.UuId).FirstOrDefaultAsync();
         }
         public async Task<int> GetId(string uuid)
         {
-            return await db.Players.Where(p=>p.UuId == uuid || p.Name == uuid).Select(p=>p.Id).FirstOrDefaultAsync();
+            return await db.Players.Where(p => p.UuId == uuid || p.Name == uuid).Select(p => p.Id).FirstOrDefaultAsync();
         }
 
         internal async Task<Dictionary<string, string>> GetNames(IEnumerable<string> uuids)
         {
-            return await db.Players.Where(p=>uuids.Contains(p.UuId)).ToDictionaryAsync(p=>p.UuId, p=>p.Name);
+            return await db.Players.Where(p => uuids.Contains(p.UuId)).ToDictionaryAsync(p => p.UuId, p => p.Name);
         }
     }
 }
