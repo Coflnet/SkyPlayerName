@@ -22,8 +22,12 @@ hostname policy, this service instead uses the driver's supported `Required`
 mode with **unconditional strict Coflnet.Core validation before authentication**.
 The native `SslCa` field is cleared so it cannot override that callback; the
 shared PEM owner reads `CA_CERT_PATH` itself. Both synchronous and asynchronous
-EF connection opens install the validator and register only validated public
-client intermediates in the workload user's CA store. Provide a private,
+EF connection opens only install callbacks. The client-certificate provider runs
+on fresh physical TLS connections, loading the current leaf/key and registering
+only validated public client intermediates in the workload user's CA store.
+Native `SslCert`/`SslKey` fields are cleared so they cannot override the provider.
+Reusing a pooled connection performs no certificate-file I/O or chain/store work.
+Provide a private,
 writable, ephemeral `HOME`; no root or machine trust store is changed.
 
 New physical connections reread certificate/key/CA files. TLS connections have a

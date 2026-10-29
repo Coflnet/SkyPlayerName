@@ -30,8 +30,11 @@ internal static class TransportSecurity
             options.SslMode = MySqlSslMode.Required;
             Required(section, "CA_CERT_PATH");
             options.SslCa = "";
-            options.SslCert = Required(section, "CERT_PATH");
-            options.SslKey = Required(section, "KEY_PATH");
+            Required(section, "CERT_PATH");
+            Required(section, "KEY_PATH");
+            // Native PEM settings override the provider, which must run only for physical TLS opens.
+            options.SslCert = "";
+            options.SslKey = "";
         }
         return options.ConnectionString;
     }
@@ -83,7 +86,13 @@ internal sealed class DatabaseTlsInterceptor : DbConnectionInterceptor
 
     private void Prepare(DbConnection connection)
     {
-        credentials.RegisterClientIntermediates();
-        ((MySqlConnection)connection).RemoteCertificateValidationCallback = credentials.ValidateServerCertificate;
+        var mysql = (MySqlConnection)connection;
+        mysql.RemoteCertificateValidationCallback = credentials.ValidateServerCertificate;
+        mysql.ProvideClientCertificatesCallback = certificates =>
+        {
+            credentials.RegisterClientIntermediates();
+            certificates.Add(credentials.GetCertificate());
+            return ValueTask.CompletedTask;
+        };
     }
 }

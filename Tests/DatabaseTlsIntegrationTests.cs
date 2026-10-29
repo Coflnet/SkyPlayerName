@@ -92,7 +92,7 @@ public class DatabaseTlsIntegrationTests
             File.WriteAllText(Path.Combine(directory, "roots.pem"), roots);
             using (var wrongKey = client.GetRSAPrivateKey()!)
                 File.WriteAllText(Path.Combine(directory, "client.key"), wrongKey.ExportPkcs8PrivateKeyPem());
-            Assert.ThrowsAsync<CryptographicException>(async () => { await using var rejected = await Connect(); });
+            Assert.ThrowsAsync<MySqlException>(async () => { await using var rejected = await Connect(); });
         }
         finally
         {

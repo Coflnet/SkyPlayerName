@@ -34,8 +34,8 @@ public class DatabaseConnectionTests
             Assert.That(options.ConnectionLifeTime, Is.EqualTo(expectedLifetime));
             Assert.That(options.SslMode, Is.EqualTo(MySqlSslMode.Required));
             Assert.That(options.SslCa, Is.Empty);
-            Assert.That(options.SslCert, Is.EqualTo("client.pem"));
-            Assert.That(options.SslKey, Is.EqualTo("client.key"));
+            Assert.That(options.SslCert, Is.Empty);
+            Assert.That(options.SslKey, Is.Empty);
         });
     }
 
@@ -50,8 +50,17 @@ public class DatabaseConnectionTests
         using var owner = new PemTlsOptions("missing-roots", "missing-cert", "missing-key");
         var interceptor = new DatabaseTlsInterceptor(owner);
         using var connection = new MySqlConnection();
-        Assert.Throws<FileNotFoundException>(() => interceptor.ConnectionOpening(connection, null!, default));
-        Assert.Throws<FileNotFoundException>(() => interceptor.ConnectionOpeningAsync(connection, null!, default));
+        // Missing files prove that logical opens only install callbacks and perform no PKI I/O.
+        Assert.DoesNotThrow(() => interceptor.ConnectionOpening(connection, null!, default));
+        Assert.That(connection.RemoteCertificateValidationCallback, Is.Not.Null);
+        Assert.That(connection.ProvideClientCertificatesCallback, Is.Not.Null);
+        Assert.Throws<FileNotFoundException>(() => connection.ProvideClientCertificatesCallback!(new()));
+        connection.ProvideClientCertificatesCallback = null;
+        connection.RemoteCertificateValidationCallback = null;
+        Assert.DoesNotThrow(() => interceptor.ConnectionOpeningAsync(connection, null!, default));
+        Assert.That(connection.RemoteCertificateValidationCallback, Is.Not.Null);
+        Assert.That(connection.ProvideClientCertificatesCallback, Is.Not.Null);
+        Assert.Throws<FileNotFoundException>(() => connection.ProvideClientCertificatesCallback!(new()));
     }
 
     [Test]
