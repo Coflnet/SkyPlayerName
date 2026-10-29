@@ -10,10 +10,11 @@
     <ProjectReference Include="../dev/hypixel.csproj" />
   </ItemGroup>
   <PropertyGroup>
-    <DefaultItemExcludes>$(DefaultItemExcludes);Client\**\*</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Client\**\*;Tests\**\*</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Coflnet.Core" Version="0.7.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.14" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.27">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -1,6 +1,9 @@
 using System;
 using System.IO;
 using System.Reflection;
+using Coflnet.Core.Security;
+using Coflnet.Sky.PlayerName.Infrastructure;
+using Microsoft.AspNetCore.Http;
 using Coflnet.Sky.PlayerName.Services;
 using Coflnet.Sky.Core;
 using Microsoft.AspNetCore.Builder;
@@ -36,19 +39,24 @@ namespace Coflnet.Sky.PlayerName
                 c.IncludeXmlComments(xmlPath);
             });
 
-            // Replace with your server version and type.
-            // Use 'MariaDbServerVersion' for MariaDB.
-            // Alternatively, use 'ServerVersion.AutoDetect(connectionString)'.
-            // For common usages, see pull request #1233.
             var serverVersion = new MariaDbServerVersion(new Version(Configuration["MARIADB_VERSION"]));
-
-            // Replace 'YourDbContext' with the name of your own DbContext derived class.
-            services.AddDbContext<HypixelContext>(
-                dbContextOptions => dbContextOptions
-                    .UseMySql(Configuration["DBConnection"], serverVersion)
-                    .EnableSensitiveDataLogging() // <-- These two calls are optional but help
-                    .EnableDetailedErrors()       // <-- with debugging (remove for production).
-            );
+            var connectionString = TransportSecurity.DatabaseConnectionString(Configuration);
+            if (Configuration.GetSection("DB:TLS").Exists())
+            {
+                services.AddKeyedSingleton<PemTlsOptions>("DB", (_, _) =>
+                    PemTlsOptions.FromConfiguration(Configuration.GetSection("DB:TLS")));
+                services.AddSingleton(p => new DatabaseTlsInterceptor(p.GetRequiredKeyedService<PemTlsOptions>("DB")));
+            }
+            if (Configuration.GetSection("HTTPS:TLS").Exists())
+                services.AddKeyedSingleton<PemTlsOptions>("HTTPS", (_, _) =>
+                    PemTlsOptions.FromConfiguration(Configuration.GetSection("HTTPS:TLS"), serverCertificate: true));
+            services.AddDbContext<HypixelContext>((provider, options) =>
+            {
+                options.UseMySql(connectionString, serverVersion);
+                var interceptor = provider.GetService<DatabaseTlsInterceptor>();
+                if (interceptor != null) options.AddInterceptors(interceptor);
+            });
+            services.AddHostedService<DatabaseReadiness>();
             services.AddResponseCaching();
             services.AddMemoryCache();
             services.AddJaeger(Configuration);
@@ -75,6 +83,19 @@ namespace Coflnet.Sky.PlayerName
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapGet("/health/ready", async context =>
+                {
+                    try
+                    {
+                        var database = context.RequestServices.GetRequiredService<HypixelContext>();
+                        await DatabaseReadiness.CheckAsync(database, context.RequestAborted);
+                        context.Response.StatusCode = StatusCodes.Status200OK;
+                    }
+                    catch (Exception)
+                    {
+                        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                    }
+                });
                 endpoints.MapMetrics();
                 endpoints.MapControllers();
             });

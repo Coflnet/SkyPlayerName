@@ -1,5 +1,6 @@
 using Coflnet.Security.OpenBao;
 using Coflnet.Sky.Core;
+using Coflnet.Sky.PlayerName.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,7 @@ namespace Coflnet.Sky.PlayerName
                 .ConfigureAppConfiguration((_, config) => config.AddOpenBaoFromEnvironment())
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.ConfigureHttps();
                     webBuilder.UseStartup<Startup>();
                 });
     }

@@ -8,7 +8,31 @@ on:
   workflow_dispatch:
 
 jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "10.0.x"
+      - name: Fetch the same reviewed dependency as the image build
+        run: |
+          git init ../dev
+          git -C ../dev remote add origin https://github.com/Coflnet/HypixelSkyblock.git
+          git -C ../dev fetch --depth=1 origin "$(cat HypixelSkyblock.commit)"
+          git -C ../dev checkout --detach FETCH_HEAD
+      - run: dotnet test Tests/SkyPlayerName.Tests.csproj --filter "TestCategory=Integration"
+
   container-ci:
+    needs: integration
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      security-events: write
     uses: Coflnet/.github/.github/workflows/container-ci.yml@main
     with:
       k8s_file: main/sky/chart/charts/sky-player-name/values.yaml
